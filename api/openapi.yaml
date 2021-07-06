@@ -1,0 +1,727 @@
+openapi: 3.0.3
+info:
+  title: API
+  description: Open api spec
+  version: 1.0.0
+servers:
+- url: https://moin-backend.azurewebsites.net
+  description: Azure Function
+tags:
+- name: information
+  description: .pdf documents on the information page
+- name: houses
+  description: all about house information on the houses page
+paths:
+  /information:
+    get:
+      tags:
+      - information
+      summary: Return all documents' metadata
+      operationId: informationGET
+      responses:
+        "200":
+          description: All information documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentMeta'
+                x-content-type: application/json
+      x-swagger-router-controller: Information
+    post:
+      tags:
+      - information
+      summary: Add a new document including metadata
+      description: Uploading a document and meta information is an atomic operation
+      operationId: informationPOST
+      requestBody:
+        $ref: '#/components/requestBodies/NewInformationDocument'
+      responses:
+        "201":
+          description: Id of the created ressource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "405":
+          description: Invalid input
+      x-swagger-router-controller: Information
+  /information/{id}:
+    delete:
+      tags:
+      - information
+      summary: Delete given document including metadata
+      operationId: informationIdDELETE
+      parameters:
+      - name: id
+        in: path
+        description: Id of the document
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        "200":
+          description: Id of the deleted ressource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "404":
+          description: Information document for given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Information
+  /information/{id}/description:
+    put:
+      tags:
+      - information
+      summary: Update document's description
+      operationId: informationIdDescriptionPUT
+      parameters:
+      - name: id
+        in: path
+        description: Id of the document
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      requestBody:
+        $ref: '#/components/requestBodies/DocumentDescription'
+      responses:
+        "201":
+          description: Confirmation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "404":
+          description: Information document for given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Information
+  /information/{id}/file:
+    get:
+      tags:
+      - information
+      summary: Download the specified file as .pdf
+      operationId: informationIdFileGET
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        "200":
+          description: The specified document as .pdf (binary Buffer)
+          headers:
+            Content-Disposition:
+              description: attachment; filename="file name"
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                x-content-type: application/pdf
+        "404":
+          description: Information document for given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Information
+    put:
+      tags:
+      - information
+      summary: Update information document
+      operationId: informationIdFilePUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateInformationDocument'
+      responses:
+        "201":
+          description: Information document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "404":
+          description: Information document for given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Information
+  /applications:
+    get:
+      tags:
+      - Applications
+      summary: Return all applications
+      operationId: applicationsGET
+      responses:
+        "200":
+          description: All applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                  - $ref: '#/components/schemas/ApplicationOwner'
+                  - $ref: '#/components/schemas/ApplicationPersonalData'
+                x-content-type: application/json
+      x-swagger-router-controller: Applications
+  /houses:
+    get:
+      tags:
+      - houses
+      summary: Return all houses
+      operationId: housesGET
+      responses:
+        "200":
+          description: All houses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                  - $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/HouseBase'
+                  - type: object
+                    properties:
+                      photos:
+                        type: array
+                        items:
+                          allOf:
+                          - $ref: '#/components/schemas/Id'
+                          - $ref: '#/components/schemas/NewHousePhotoMeta'
+                  - type: object
+                    properties:
+                      attachments:
+                        type: array
+                        items:
+                          allOf:
+                          - $ref: '#/components/schemas/Id'
+                          - $ref: '#/components/schemas/NewHouseAttachmentMeta'
+                x-content-type: application/json
+      x-swagger-router-controller: Houses
+    post:
+      tags:
+      - houses
+      summary: Create a new house
+      operationId: housesPOST
+      requestBody:
+        $ref: '#/components/requestBodies/NewHouse'
+      responses:
+        "201":
+          description: Id of the created ressource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "400":
+          description: Invalid input
+      x-swagger-router-controller: Houses
+  /houses/{id}:
+    put:
+      tags:
+      - houses
+      summary: "Update house information. The entire house will be replaced. Make\
+        \ sure, that you send all the data along the request."
+      operationId: housesIdPUT
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateHouse'
+      responses:
+        "201":
+          description: House updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "404":
+          description: House with given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Houses
+    delete:
+      tags:
+      - houses
+      summary: Delete house including all photos and attachments
+      operationId: housesIdDELETE
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        "200":
+          description: Id of the deleted ressource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+        "404":
+          description: House with given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Houses
+  /houses/{houseId}/file/{fileId}:
+    get:
+      tags:
+      - houses
+      summary: Download binary of given attachment or photo for given house
+      operationId: housesHouseIdFileFileIdGET
+      parameters:
+      - name: houseId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      - name: fileId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/Id'
+      responses:
+        "200":
+          description: The specified binary (binary Buffer)
+          headers:
+            Content-Disposition:
+              description: attachment; filename="file name"
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+                x-content-type: application/pdf
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpg:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Information document for given id could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Id'
+      x-swagger-router-controller: Houses
+components:
+  schemas:
+    ApplicationOwner:
+      properties:
+        editorOwns:
+          type: boolean
+        type:
+          type: string
+          enum:
+          - holidays
+          - health
+    ApplicationPersonalData:
+      properties:
+        street:
+          type: string
+        number:
+          type: string
+        zip:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        accessible:
+          type: boolean
+        allergies:
+          type: boolean
+        singleParent:
+          type: boolean
+        companyPosition:
+          type: string
+          enum:
+          - coworker
+          - management
+          - tenant
+    Id:
+      required:
+      - id
+      properties:
+        id:
+          type: string
+      example:
+        id: id
+    File:
+      required:
+      - content
+      - fileName
+      properties:
+        fileName:
+          type: string
+        content:
+          type: string
+          description: base64 encoded string
+          format: byte
+    NewHouseAttachment:
+      allOf:
+      - $ref: '#/components/schemas/NewHouseAttachmentMeta'
+      - $ref: '#/components/schemas/HttpFileContent'
+    NewHouseAttachmentMeta:
+      allOf:
+      - $ref: '#/components/schemas/FileMeta'
+      - $ref: '#/components/schemas/ItemDescription'
+    NewHousePhoto:
+      allOf:
+      - $ref: '#/components/schemas/NewHousePhotoMeta'
+      - $ref: '#/components/schemas/HttpFileContent'
+    NewHousePhotoMeta:
+      allOf:
+      - $ref: '#/components/schemas/FileMeta'
+      - $ref: '#/components/schemas/OrderedItem'
+    HttpFileContent:
+      properties:
+        content:
+          type: string
+    FileMeta:
+      properties:
+        fileName:
+          type: string
+        url:
+          type: string
+    ItemDescription:
+      properties:
+        description:
+          type: string
+    OrderedItem:
+      properties:
+        order:
+          type: number
+    DocumentDescription:
+      properties:
+        description:
+          type: string
+    DocumentLink:
+      properties:
+        url:
+          type: string
+    HouseBase:
+      allOf:
+      - $ref: '#/components/schemas/HouseDescription'
+      - type: object
+        properties:
+          houseCharges:
+            $ref: '#/components/schemas/HouseCharges'
+    HouseDescription:
+      properties:
+        activated:
+          type: boolean
+        houseName:
+          type: string
+        houseType:
+          type: string
+        region:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        streetAndHouseNo:
+          type: string
+        board:
+          type: string
+        telephone:
+          type: string
+        email:
+          type: string
+          format: email
+        facilities:
+          type: string
+        addidtionalEquipment:
+          type: string
+        furtherInformation:
+          type: string
+    HouseCharges:
+      properties:
+        overnightBreakfast:
+          $ref: '#/components/schemas/HouseCharge'
+        halfBoard:
+          $ref: '#/components/schemas/HouseCharge'
+        fullBoard:
+          $ref: '#/components/schemas/HouseCharge'
+    HouseCharge:
+      properties:
+        activated:
+          type: boolean
+        accomodation:
+          $ref: '#/components/schemas/houseAccomodation'
+        countervailingBenefit:
+          $ref: '#/components/schemas/houseCountervailingBenefit'
+        furtherPosition:
+          $ref: '#/components/schemas/houseFurtherPosition'
+    houseAccomodation:
+      type: object
+      properties:
+        adult:
+          type: number
+          format: float
+        childYoung:
+          type: number
+          format: float
+        childOld:
+          type: number
+          format: float
+        retiree:
+          type: number
+          format: float
+        executive:
+          type: number
+          format: float
+        externalAdult:
+          type: number
+          format: float
+        externalChild:
+          type: number
+          format: float
+    houseCountervailingBenefit:
+      type: object
+      properties:
+        firstAdult:
+          type: number
+          format: float
+        secondAdult:
+          type: number
+          format: float
+        childYoung:
+          type: number
+          format: float
+        childOld:
+          type: number
+          format: float
+    houseFurtherPosition:
+      type: object
+      properties:
+        cleaning:
+          type: number
+          format: float
+        visitorsTaxSummer:
+          type: number
+          format: float
+        visitorsTaxWinter:
+          type: number
+          format: float
+    DocumentMeta:
+      allOf:
+      - $ref: '#/components/schemas/Id'
+      - $ref: '#/components/schemas/DocumentDescription'
+      - $ref: '#/components/schemas/DocumentLink'
+      - required:
+        - description
+        - fileName
+        - id
+        - url
+        type: object
+        properties:
+          fileName:
+            type: string
+  responses:
+    Deleted:
+      description: Id of the deleted ressource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    Created:
+      description: Id of the created ressource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    InformationDocumentNotFound:
+      description: Information document for given id could not be found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    InformationDocumentUpdated:
+      description: Information document updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    Application:
+      description: All applications
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              allOf:
+              - $ref: '#/components/schemas/ApplicationOwner'
+              - $ref: '#/components/schemas/ApplicationPersonalData'
+            x-content-type: application/json
+    Houses:
+      description: All houses
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              allOf:
+              - $ref: '#/components/schemas/Id'
+              - $ref: '#/components/schemas/HouseBase'
+              - type: object
+                properties:
+                  photos:
+                    type: array
+                    items:
+                      allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - $ref: '#/components/schemas/NewHousePhotoMeta'
+              - type: object
+                properties:
+                  attachments:
+                    type: array
+                    items:
+                      allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - $ref: '#/components/schemas/NewHouseAttachmentMeta'
+            x-content-type: application/json
+    HouseNotFound:
+      description: House with given id could not be found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+    HouseUpdated:
+      description: House updated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Id'
+  requestBodies:
+    NewInformationDocument:
+      description: Schema to upload a new information document.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/File'
+      required: true
+    DocumentDescription:
+      description: Requestbody for information document description update
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DocumentDescription'
+    UpdateInformationDocument:
+      description: Requestbody for information document update
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/File'
+    NewHouse:
+      description: Requestbody for creating a new house
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/HouseBase'
+            - type: object
+              properties:
+                photos:
+                  type: array
+                  items:
+                    allOf:
+                    - $ref: '#/components/schemas/NewHousePhoto'
+            - type: object
+              properties:
+                attachments:
+                  type: array
+                  items:
+                    allOf:
+                    - $ref: '#/components/schemas/NewHouseAttachment'
+    UpdateHouse:
+      description: Requestbody for updating a house
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/Id'
+            - $ref: '#/components/schemas/HouseBase'
+            - type: object
+              properties:
+                photos:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/NewHousePhoto'
+                    - type: object
+                      allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - $ref: '#/components/schemas/NewHousePhotoMeta'
+            - type: object
+              properties:
+                attachments:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/NewHouseAttachment'
+                    - type: object
+                      allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - $ref: '#/components/schemas/NewHouseAttachment'
+                    - type: object
+                      allOf:
+                      - $ref: '#/components/schemas/Id'
+                      - $ref: '#/components/schemas/NewHouseAttachmentMeta'
